@@ -4,9 +4,9 @@ ARG GO_VERSION="1.25"
 ARG ALPINE_VERSION="3.23"
 ARG XX_VERSION="1.9.0"
 
-FROM --platform=$BUILDPLATFORM tonistiigi/xx:${XX_VERSION} AS xx
+FROM --platform=$BUILDPLATFORM devopspaper.jfrog.io/docker/tonistiigi/xx:${XX_VERSION} AS xx
 
-FROM --platform=$BUILDPLATFORM golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
+FROM --platform=$BUILDPLATFORM devopspaper.jfrog.io/docker/golang:${GO_VERSION}-alpine${ALPINE_VERSION} AS base
 COPY --from=xx / /
 ENV CGO_ENABLED=0
 ENV GOFLAGS="-mod=vendor"
@@ -49,19 +49,19 @@ RUN --mount=type=bind,target=. \
   xx-verify --static /usr/bin/diun
 EOT
 
-FROM scratch AS binary-unix
+FROM scratch AS devopspaper.jfrog.io/docker/devopspaper.jfrog.io/docker/binary-unix
 COPY --link --from=build /usr/bin/diun /
 
 FROM scratch AS binary-windows
 COPY --link --from=build /usr/bin/diun /diun.exe
 
-FROM binary-unix AS binary-darwin
-FROM binary-unix AS binary-linux
+FROM devopspaper.jfrog.io/docker/devopspaper.jfrog.io/docker/binary-unix AS binary-darwin
+FROM devopspaper.jfrog.io/docker/devopspaper.jfrog.io/docker/binary-unix AS binary-linux
 FROM binary-$TARGETOS AS binary
 # enable scanning for this stage
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
 
-FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS build-artifact
+FROM --platform=$BUILDPLATFORM devopspaper.jfrog.io/docker/alpine:${ALPINE_VERSION} AS build-artifact
 RUN apk add --no-cache bash tar zip
 WORKDIR /work
 ARG TARGETOS
@@ -85,7 +85,7 @@ FROM scratch AS artifact
 COPY --link --from=build-artifact /out /
 
 FROM scratch AS artifacts
-FROM --platform=$BUILDPLATFORM alpine:${ALPINE_VERSION} AS releaser
+FROM --platform=$BUILDPLATFORM devopspaper.jfrog.io/docker/alpine:${ALPINE_VERSION} AS releaser
 RUN apk add --no-cache bash coreutils
 WORKDIR /out
 RUN --mount=from=artifacts,source=.,target=/artifacts <<EOT
@@ -98,7 +98,7 @@ EOT
 FROM scratch AS release
 COPY --link --from=releaser /out /
 
-FROM alpine:${ALPINE_VERSION}
+FROM devopspaper.jfrog.io/docker/alpine:${ALPINE_VERSION}
 RUN apk --update --no-cache add ca-certificates tzdata
 COPY --from=build /usr/bin/diun /usr/local/bin/diun
 ENV PROFILER_PATH="/profiler" \
