@@ -49,14 +49,14 @@ RUN --mount=type=bind,target=. \
   xx-verify --static /usr/bin/diun
 EOT
 
-FROM scratch AS devopspaper.jfrog.io/docker/devopspaper.jfrog.io/docker/binary-unix
+FROM scratch AS binary-unix
 COPY --link --from=build /usr/bin/diun /
 
 FROM scratch AS binary-windows
 COPY --link --from=build /usr/bin/diun /diun.exe
 
-FROM devopspaper.jfrog.io/docker/devopspaper.jfrog.io/docker/binary-unix AS binary-darwin
-FROM devopspaper.jfrog.io/docker/devopspaper.jfrog.io/docker/binary-unix AS binary-linux
+FROM binary-unix AS binary-darwin
+FROM binary-unix AS binary-linux
 FROM binary-$TARGETOS AS binary
 # enable scanning for this stage
 ARG BUILDKIT_SBOM_SCAN_STAGE=true
